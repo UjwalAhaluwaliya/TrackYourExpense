@@ -1,8 +1,11 @@
 package com.ujwal.TrackYourExpense.Service;
 
-import com.ujwal.TrackYourExpense.Model.*;
-import com.ujwal.TrackYourExpense.Repository.*;
+import com.ujwal.TrackYourExpense.Model.userRegister;
+import com.ujwal.TrackYourExpense.Model.Expense;
+import com.ujwal.TrackYourExpense.Repository.UserRepo;
+import com.ujwal.TrackYourExpense.Repository.ExpenseRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,7 +20,9 @@ public class UserService {
     @Autowired
     private ExpenseRepo expenseRepo;
 
-    // ----- User operations -----
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public String registerUser(userRegister user) {
         if (user.getName() == null || user.getEmailId() == null) {
             return "Name and email are required";
@@ -28,20 +33,19 @@ public class UserService {
         if (userRepo.findByEmailId(user.getEmailId()).isPresent()) {
             return "Email already registered";
         }
+
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+        user.setConfirmPassword(""); // Clear confirm password after validation
+
         userRepo.save(user);
         return "Success";
-    }
-
-    public Optional<userRegister> loginUser(String email, String password) {
-        return userRepo.findByEmailId(email)
-                .filter(u -> u.getPassword().equals(password));
     }
 
     public Optional<userRegister> findUserByEmail(String email) {
         return userRepo.findByEmailId(email);
     }
 
-    // ----- Expense operations -----
     public Expense saveExpense(Expense expense) {
         return expenseRepo.save(expense);
     }
